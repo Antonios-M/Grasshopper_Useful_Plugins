@@ -48,34 +48,53 @@ namespace ClosestPointsWithinRange
         /// to store data in output parameters.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            ///
+            /// This plugin takes a focus point(s), a cloud of points, and a radius and uses the RTree datastructure to search for all the radius-close points to the focus point. This was
+            /// developed to make this process faster for larger point clouds
+            ///
+            
+            /// cloud of points to search from
             List<Point3d> points = new List<Point3d>();
+
+            /// focus point
             List<Point3d> focus = new List<Point3d>();
+
+            /// radius from focus point to search from
             double distance = new double();
+
+            /// retrieve inputs
             DA.GetDataList(0, points);
             DA.GetDataList(1, focus);
             DA.GetData(2, ref distance);
 
+            /// inintialise rtree data structure using Rhinocommon's built in RTree implementation
             RTree rtree = new RTree();
             for (int i = 0; i < points.Count; i++)
             {
                 rtree.Insert(points[i], i);
             }
 
+            /// initialise neighbours datatree to add neighbours to each focus point (branch)
             DataTree<int> neighbourTree = new DataTree<int>();
 
             for (int i = 0; i < focus.Count; i++)
             {
+                /// list to store neighbours of each focus point
                 List<int> neighbours = new List<int>();
 
+                /// search sphere used for rtree
                 Sphere searchSphere = new Sphere(focus[i], distance);
+
+                /// rtree search with anonymous function
                 rtree.Search(searchSphere,
                   (sender, args) => { neighbours.Add(args.Id); });
 
+                /// path to add to (focus point index)
                 GH_Path path = new GH_Path(i);
                 if (neighbours.Count == 0) neighbourTree.EnsurePath(path);
                 else
                 {
-                    //Add non-empty bus stops to data tree
+                    //Add neighbour to neighbours branch
                     foreach (int neighbour in neighbours)
                     {
                         neighbourTree.Add(neighbour, path);
