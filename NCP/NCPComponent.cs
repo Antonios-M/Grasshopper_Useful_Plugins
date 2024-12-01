@@ -49,20 +49,32 @@ namespace NCP
         /// to store data in output parameters.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            /// Point cloud to search from
             List<Point3d> c = new List<Point3d>();
+
+            /// focus (obstacle) points to find the closest points to 
             List<Point3d> o = new List<Point3d>();
+
+            // Number of recursion calls (number of iterations)
             int s = new int();
+
+            /// Fetch inputs
             DA.GetDataList(0, c);
             DA.GetDataList(1, o);
             DA.GetData(2, ref s);
 
+            /// main recursive function to find next closest points
             List<Point3d> supps(int steps, List<Point3d> candidates, List<Point3d> obstacles)
             {
+                ///
+                /// Each recursive call finds the point in the point cloud which has the least combined distance to all obstacle points and adds that point to the obstacle point to use for the next recursion call   
+                ///
                 if (obstacles.Count == steps)
                 {
                     return obstacles;
                 }
 
+                /// store new obstacle points
                 List<Point3d> newObstacles = new List<Point3d>();
                 foreach (Point3d point in obstacles)
                 {
